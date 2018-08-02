@@ -1,0 +1,8 @@
+---
+
+- name: add prometheus user
+  user:
+    name: "{{ prometheus_user }}"
+    createhome: false
+    shell: /bin/false
+

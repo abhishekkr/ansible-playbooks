@@ -1,0 +1,47 @@
+---
+
+- name: Unarchive remote Prometheus tarball
+  tags:
+    - tarball
+  unarchive:
+    src: "{{ promtheus_package_url }}"
+    dest: "{{ promtheus_package_parent }}"
+    remote_src: yes
+
+- name: copy the server binary to PATH
+  copy:
+    src: "{{ promtheus_package }}/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: 0755
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    remote_src: yes
+  with_items:
+    - prometheus
+    - promtool
+
+- name: copy the prometheus config dirs
+  synchronize:
+    src: "{{ promtheus_package }}/{{ item }}"
+    dest: "/etc/prometheus/"
+    recursive: yes
+    archive: yes
+  with_items:
+    - consoles
+    - console_libraries
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: set correct config permissions
+  file:
+    dest: "/etc/prometheus/"
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    recurse: yes
+
+- name: Clean artifact path
+  tags:
+    - tarball
+    - clean
+  file:
+    state: absent
+    path: "{{ promtheus_package }}/"

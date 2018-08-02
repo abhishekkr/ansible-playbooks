@@ -1,0 +1,49 @@
+---
+
+- name: Ensure that /etc/prometheus exists
+  file:
+    state: directory
+    path: /etc/prometheus
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    mode: 0755
+
+- name: place prometheus config
+  template:
+    src: prometheus.yaml.j2
+    dest: /etc/prometheus/prometheus.yaml
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+
+- name: create /var/lib/promtheus/data
+  file:
+    state: directory
+    path: /var/lib/prometheus/data
+    recurse: true
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_user }}"
+    mode: 0755
+
+- name: warning to setup custom service is not systemd
+  debug:
+    msg: "No Service setup can be done, current support is only for Systemd."
+  when:
+    - ansible_service_mgr  != 'systemd'
+
+- name: put systemd service file in place
+  template:
+    src: prometheus.systemd.j2
+    dest: /etc/systemd/system/prometheus.service
+  when:
+    - ansible_service_mgr  == 'systemd'
+
+- name: update systemd and restart prometheus server systemd
+  systemd:
+    daemon-reload: true
+    enabled: true
+    state: restarted
+    name: prometheus
+  when:
+    - ansible_service_mgr  == 'systemd'
+  notify: restart_prometheus_server
+

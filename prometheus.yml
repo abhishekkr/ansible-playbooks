@@ -1,0 +1,14 @@
+---
+
+- hosts: prometheus
+  become: yes
+  become_user: root
+  vars:
+    prometheus_user: "prometheus"
+    prometheus_version: "2.0.0"
+    promtheus_package_url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    promtheus_package_parent: "/tmp"
+    promtheus_package: "{{ promtheus_package_parent }}/prometheus-{{ prometheus_version }}.linux-amd64"
+  roles:
+    - prometheus
+
